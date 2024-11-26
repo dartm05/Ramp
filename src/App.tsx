@@ -14,10 +14,10 @@ export function App() {
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
 
-  const [transactions, setTransactions] = useState<Transaction[] | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
-    setTransactions(paginatedTransactions?.data ?? transactionsByEmployee ?? null)
+    setTransactions(paginatedTransactions?.data ?? transactionsByEmployee ?? [])
   }, [paginatedTransactions, transactionsByEmployee])
 
   const updateTransaction = useCallback((transactionId: string, approved: boolean) => {
@@ -49,6 +49,12 @@ export function App() {
       loadAllTransactions()
     }
   }, [employeeUtils.loading, employees, loadAllTransactions])
+
+  const handleViewMore = async () => {
+    await loadAllTransactions()
+    const newTransactions = paginatedTransactions?.data ?? transactionsByEmployee ?? []
+    setTransactions((prevTransactions) => [...prevTransactions, ...newTransactions])
+  }
 
   return (
     <Fragment>
@@ -87,9 +93,7 @@ export function App() {
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
-              onClick={async () => {
-                await loadAllTransactions()
-              }}
+              onClick={handleViewMore}
             >
               View More
             </button>
