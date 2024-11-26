@@ -19,6 +19,8 @@ export function App() {
   const [isLoading, setIsLoading] = useState(false)
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [hasMoreData, setHasMoreData] = useState(true)
 
   useEffect(() => {
     setTransactions(paginatedTransactions?.data ?? transactionsByEmployee ?? [])
@@ -55,10 +57,26 @@ export function App() {
   }, [employeesLoading, employees, loadAllTransactions])
 
   const handleViewMore = async () => {
+    if (!hasMoreData) return
     await loadAllTransactions()
     const newTransactions = paginatedTransactions?.data ?? transactionsByEmployee ?? []
-    setTransactions((prevTransactions) => [...prevTransactions, ...newTransactions])
+    if (newTransactions.length === 0) {
+      setHasMoreData(false)
+    } else {
+      setTransactions((prevTransactions) => [...prevTransactions, ...newTransactions])
+    }
   }
+
+  const handleEmployeeChange = async (newValue: Employee | null) => {
+    setSelectedEmployee(newValue)
+    if (newValue === null || newValue.id == EMPTY_EMPLOYEE.id) {
+      await loadAllTransactions()
+    } else {
+      await loadTransactionsByEmployee(newValue.id)
+    }
+  }
+
+  const isTransactionsPaginated = selectedEmployee === null || selectedEmployee.id === EMPTY_EMPLOYEE.id
 
   return (
     <Fragment>
@@ -77,27 +95,21 @@ export function App() {
             value: item.id,
             label: `${item.firstName} ${item.lastName}`,
           })}
-          onChange={async (newValue) => {
-            if (newValue === null) {
-              return
-            }
-            if (newValue.id == EMPTY_EMPLOYEE.id) {
-              await loadAllTransactions()
-              return
-            }
-            await loadTransactionsByEmployee(newValue.id)
-          }}
+          onChange={handleEmployeeChange}
         />
 
         <div className="RampBreak--l" />
 
         <div className="RampGrid">
           <Transactions transactions={transactions} updateTransaction={updateTransaction} />
-          {transactions !== null && (
-            <button className="RampButton" disabled={transactionsLoading} onClick={handleViewMore}>
-              View More
-            </button>
-          )}
+          {isTransactionsPaginated &&
+            transactions.length > 0 &&
+            hasMoreData &&
+            paginatedTransactions?.nextPage != null && (
+              <button className="RampButton" disabled={transactionsLoading} onClick={handleViewMore}>
+                View More
+              </button>
+            )}
         </div>
       </main>
     </Fragment>
