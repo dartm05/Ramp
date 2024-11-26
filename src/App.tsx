@@ -6,7 +6,7 @@ import { useEmployees } from "./hooks/useEmployees"
 import { usePaginatedTransactions } from "./hooks/usePaginatedTransactions"
 import { useTransactionsByEmployee } from "./hooks/useTransactionsByEmployee"
 import { EMPTY_EMPLOYEE } from "./utils/constants"
-import { Employee } from "./utils/types"
+import { Employee, Transaction } from "./utils/types"
 
 export function App() {
   const { data: employees, ...employeeUtils } = useEmployees()
@@ -14,10 +14,17 @@ export function App() {
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
 
-  const transactions = useMemo(
-    () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
-    [paginatedTransactions, transactionsByEmployee]
-  )
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null)
+
+  useEffect(() => {
+    setTransactions(paginatedTransactions?.data ?? transactionsByEmployee ?? null)
+  }, [paginatedTransactions, transactionsByEmployee])
+
+  const updateTransaction = useCallback((transactionId: string, approved: boolean) => {
+    setTransactions(
+      (prev) => prev?.map((t) => (t.id === transactionId ? { ...t, approved } : t)) ?? null
+    )
+  }, [])
 
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
@@ -72,8 +79,7 @@ export function App() {
         <div className="RampBreak--l" />
 
         <div className="RampGrid">
-          <Transactions transactions={transactions} />
-
+          <Transactions transactions={transactions} updateTransaction={updateTransaction} />
           {transactions !== null && (
             <button
               className="RampButton"
