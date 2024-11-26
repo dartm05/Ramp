@@ -9,9 +9,13 @@ import { EMPTY_EMPLOYEE } from "./utils/constants"
 import { Employee, Transaction } from "./utils/types"
 
 export function App() {
-  const { data: employees, ...employeeUtils } = useEmployees()
+  const { data: employees, loading: employeesLoading, ...employeeUtils } = useEmployees()
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
-  const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
+  const {
+    data: transactionsByEmployee,
+    loading: transactionsLoading,
+    ...transactionsByEmployeeUtils
+  } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -45,10 +49,10 @@ export function App() {
   )
 
   useEffect(() => {
-    if (employees === null && !employeeUtils.loading) {
+    if (employees === null && !employeesLoading) {
       loadAllTransactions()
     }
-  }, [employeeUtils.loading, employees, loadAllTransactions])
+  }, [employeesLoading, employees, loadAllTransactions])
 
   const handleViewMore = async () => {
     await loadAllTransactions()
@@ -64,7 +68,7 @@ export function App() {
         <hr className="RampBreak--l" />
 
         <InputSelect<Employee>
-          isLoading={isLoading}
+          isLoading={employeesLoading}
           defaultValue={EMPTY_EMPLOYEE}
           items={employees === null ? [] : [EMPTY_EMPLOYEE, ...employees]}
           label="Filter by employee"
@@ -90,11 +94,7 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} updateTransaction={updateTransaction} />
           {transactions !== null && (
-            <button
-              className="RampButton"
-              disabled={paginatedTransactionsUtils.loading}
-              onClick={handleViewMore}
-            >
+            <button className="RampButton" disabled={transactionsLoading} onClick={handleViewMore}>
               View More
             </button>
           )}
