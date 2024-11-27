@@ -14,7 +14,6 @@ export const Transactions: TransactionsComponent = ({ transactions, updateTransa
         value: newValue,
       })
       updateTransaction(transactionId, newValue)
-      console.log(transactionId)
     },
     [fetchWithoutCache, updateTransaction]
   )
